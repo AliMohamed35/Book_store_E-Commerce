@@ -1,40 +1,85 @@
+import sequelize from "../../DB/connection";
 import Book from "../../DB/models/book.model";
 import Order from "../../DB/models/orders_model";
 import User from "../../DB/models/user.model";
-import { ResourceNotFoundError } from "../../ExceptionHandler/customError";
+import {
+  BadRequestError,
+  ResourceNotFoundError,
+} from "../../ExceptionHandler/customError";
 import { CreateOrderDTO, OrderResponseDTO, OrderStatus } from "./order.dto";
 
 export class OrderService {
-  async placeOrder(userId: number, bookId: number, orderData: CreateOrderDTO): Promise<OrderResponseDTO> {
-    // check user existence
-    const existingUser = await User.findByPk(userId);
-    if (!existingUser) throw new ResourceNotFoundError();
+  async placeOrder(
+    userId: number,
+    items: { bookId: number; quantity: number }[],
+  ): Promise<OrderResponseDTO[]> {
+    // Return array of orders
 
-    // check book existence
-    const existingBook = await Book.findByPk(bookId);
-    if (!existingBook) throw new ResourceNotFoundError();
+    // create transaction
+    const transaction = await sequelize.transaction();
 
-    const createdOrder = await Order.create({
-      user_id: userId,
-      book_id: bookId,
-      status: OrderStatus.PENDING,
-      quantity: orderData.quantity,
-      price_at_purchase: existingBook.getDataValue("price") * orderData.quantity,
-    });
+    try {
+      const orders: OrderResponseDTO[] = [];
 
-    return {
-      user_id: userId,
-      book_id: bookId,
-      status: OrderStatus.PENDING,
-      quantity: orderData.quantity,
-      priceAtPurchase: existingBook.getDataValue("price") * orderData.quantity,
-    };
+      for (const item of items) {
+        const book = await Book.findByPk(item.bookId, { transaction });
+
+        if (!book) {
+          throw new ResourceNotFoundError(`Book: ${item.bookId} not found!`);
+        }
+
+        const currentStock = book.getDataValue("stock");
+
+        if (currentStock < item.quantity) {
+          throw new BadRequestError(
+            `Insufficient stock for book ${item.bookId}`,
+          );
+        }
+
+        const priceAtPurchase = item.quantity * book.getDataValue("price");
+
+        // Update stock
+        await book.update(
+          { stock: currentStock - item.quantity },
+          { transaction },
+        );
+
+        // Create order WITH transaction
+        const order = await Order.create(
+          {
+            user_id: userId,
+            book_id: item.bookId,
+            status: OrderStatus.PENDING,
+            quantity: item.quantity,
+            price_at_purchase: priceAtPurchase,
+          },
+          { transaction },
+        );
+
+        orders.push({
+          user_id: userId,
+          book_id: item.bookId,
+          status: OrderStatus.PENDING,
+          quantity: item.quantity,
+          price_at_purchase: priceAtPurchase,
+        });
+      }
+
+      // Commit transaction - all succeeded
+      await transaction.commit();
+
+      return orders;
+    } catch (error) {
+      // Rollback - something failed
+      await transaction.rollback();
+      throw error;
+    }
   }
 
-  async deleteOrder(id: number): Promise<number>{
+  async deleteOrder(id: number): Promise<number> {
     const existingOrder = await Order.findByPk(id);
 
-    if(!existingOrder) throw new ResourceNotFoundError("Order doesn't exist!");
+    if (!existingOrder) throw new ResourceNotFoundError("Order doesn't exist!");
 
     existingOrder.destroy();
 
