@@ -9,7 +9,7 @@ import {
 
 export class BookService {
   async addBook(bookData: CreateBookDTO): Promise<BookCreatingResponseDTO> {
-    const createdBook = await Book.create({
+    await Book.create({
       ...bookData,
     });
 
@@ -36,7 +36,8 @@ export class BookService {
     if (!existingBook) throw new ResourceNotFoundError("Book doesn't exist!");
 
     return {
-      book_name: existingBook.getDataValue("bookName"),
+      id,
+      book_name: existingBook.getDataValue("book_name"),
       description: existingBook.getDataValue("description"),
       price: existingBook.getDataValue("price"),
       stock: existingBook.getDataValue("stock"),
@@ -52,7 +53,18 @@ export class BookService {
     });
 
     if (rows.length === 0) {
-      throw new ResourceNotFoundError("No books found in database!");
+      // throw new ResourceNotFoundError("No books found in database!");
+      return {
+        data: rows, // Empty array
+        pagination: {
+          currentPage: page,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: limit,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
     }
 
     return {
@@ -79,7 +91,7 @@ export class BookService {
     await existingBook.update({ ...bookData });
 
     return {
-      book_name: existingBook.getDataValue("bookName"),
+      book_name: existingBook.getDataValue("book_name"),
       description: existingBook.getDataValue("description"),
       price: existingBook.getDataValue("price"),
       stock: existingBook.getDataValue("stock"),

@@ -3,7 +3,7 @@ import sequelize from "../../DB/connection.ts";
 
 export interface BookAttributes{
   id: number,
-  bookName: string,
+  book_name: string,
   description: string,
   price: number,
   stock: number
@@ -12,7 +12,7 @@ export interface BookAttributes{
 const Book = sequelize.define(
   "Book",
   {
-    bookName: {
+    book_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },

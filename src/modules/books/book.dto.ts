@@ -12,13 +12,14 @@ export interface CreateBookDTO{
 }
 
 export interface UpdateBookDTO{
-    book_name: string,
-    description: string,
-    price: number,
-    stock: number
+    book_name?: string,
+    description?: string,
+    price?: number,
+    stock?: number
 }
 
 export interface BookResponseDTO{
+    id: number,
     book_name: string,
     description: string,
     price: number,
