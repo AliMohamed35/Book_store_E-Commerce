@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import joi, { ObjectSchema } from "joi";
+import joi, { ObjectSchema, required } from "joi";
 
 export const validate =
   (schema: ObjectSchema, property: "body" | "params" | "query" = "body") =>
@@ -75,3 +75,17 @@ export const joiResetPassword = joi.object({
         "Password must contain at least one uppercase letter, one special character, and no spaces",
     }),
 });
+
+export const joiUpdateBook = joi.object({
+  book_name: joi.string().optional().min(15).max(30),
+  description: joi.string().max(50).min(20).optional(),
+  price: joi.number().positive().optional(),
+  stock: joi.number().min(0).integer().optional(),
+})
+
+export const joiAddBook = joi.object({
+  book_name: joi.string().min(15).max(30).required(),
+  description: joi.string().max(50).min(10).required(),
+  price: joi.number().positive().required(),
+  stock: joi.number().min(0).integer().required(),
+})
