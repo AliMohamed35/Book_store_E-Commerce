@@ -1,5 +1,6 @@
 import Book, { BookAttributes } from "../../DB/models/book.model";
 import { ResourceNotFoundError } from "../../ExceptionHandler/customError";
+import logger from "../../utils/logs/logger";
 import {
   BookCreatingResponseDTO,
   BookResponseDTO,
@@ -9,10 +10,11 @@ import {
 
 export class BookService {
   async addBook(bookData: CreateBookDTO): Promise<BookCreatingResponseDTO> {
-    await Book.create({
+    const createdBook = await Book.create({
       ...bookData,
     });
 
+    logger.info(`added book: ${createdBook}`)
     return {
       book_name: bookData.book_name,
       price: bookData.price,
@@ -26,6 +28,7 @@ export class BookService {
     if (!existingBook) throw new ResourceNotFoundError("Book doesn't exist!");
 
     await Book.destroy({ where: { id } });
+    logger.info(`deleted book: ${existingBook}`)
 
     return id;
   }
@@ -88,7 +91,9 @@ export class BookService {
 
     if (!existingBook) throw new ResourceNotFoundError("Book doesn't exist!");
 
-    await existingBook.update({ ...bookData });
+    const updatedBook = await existingBook.update({ ...bookData });
+
+    logger.info(`Updated book: ${updatedBook}`);
 
     return {
       book_name: existingBook.getDataValue("book_name"),

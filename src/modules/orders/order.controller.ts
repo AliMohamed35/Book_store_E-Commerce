@@ -7,13 +7,11 @@ export class OrderController {
   async placeOrder(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id; // userId
-      const bookdId = parseId(req.params.id); // bookId
-      const orderData = req.body;
+      const items = req.body;
 
       const placedOrder = await orderService.placeOrder(
         userId,
-        bookdId,
-        orderData,
+        items,
       );
 
       return res
