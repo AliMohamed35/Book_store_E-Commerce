@@ -13,7 +13,7 @@ export const router = Router();
 router.post("/register", validate(joiUserSchema), userController.register);
 router.post("/login", userController.login);
 router.post("/verify", userController.verifyUser);
-router.post("/logout", auth,  userController.logout);
+router.post("/logout", auth, userController.logout);
 
 router.post(
   "/reset-password",
