@@ -45,6 +45,7 @@ export class UserController {
         success: true,
         email: result.email,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken
       });
     } catch (error) {
       next(error);
