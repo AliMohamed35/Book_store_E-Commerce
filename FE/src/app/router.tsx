@@ -1,36 +1,27 @@
 import { createBrowserRouter } from "react-router-dom";
-
+import Layout from "../Layout";
 import HomePage from "../pages/HomePage";
 import NotFoundPage from "../pages/NotFoundPage";
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 
-// We'll add these as we create them:
-// import BooksPage from '../features/books/pages/BooksPage';
-import BookDetailPage from '../features/books/pages/BookDetails';
-// import CartPage from '../features/cart/pages/CartPage';
-// import OrdersPage from '../features/orders/pages/OrdersPage';
-
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomePage />,
-  },
-  // Auth routes
+  // Auth routes - NO header/layout
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
-
-  // Books routes
-  // { path: '/books', element: <BooksPage /> },
-  { path: '/book/:id', element: <BookDetailPage /> },
-
-  // Cart & Orders
-  // { path: '/cart', element: <CartPage /> },
-  // { path: '/orders', element: <OrdersPage /> },
-
-  // 404 catch-all (must be last)
+  
+  // Main routes - WITH header/layout
   {
-    path: "*",
-    element: <NotFoundPage />,
+    path: "/",
+    element: <Layout />,
+    children: [
+      { index: true, element: <HomePage /> },
+      // Add other protected routes here
+      // { path: "books", element: <BooksPage /> },
+      // { path: "books/:id", element: <BookDetailsPage /> },
+    ],
   },
+  
+  // 404 (can be with or without layout)
+  { path: "*", element: <NotFoundPage /> },
 ]);

@@ -16,7 +16,9 @@ interface JwtPayload {
 
 export const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const accessToken = req.cookies?.accessToken;
+    // Check for token in cookies first, then in Authorization header
+    const accessToken = req.cookies?.accessToken || 
+      (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : null);
     const refreshToken = req.cookies?.refreshToken;
 
     if (!accessToken && !refreshToken) {

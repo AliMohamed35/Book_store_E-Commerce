@@ -14,7 +14,7 @@ const RegisterPage = () => {
   const dispatch = useAppDispatch();
   const notify = () => toast("Registration done successfully");
 
-  const { isLoading, error, isAuthenticated } = useAppSelector(
+  const { isLoading, error} = useAppSelector(
     (state) => state.auth,
   );
 
@@ -54,12 +54,6 @@ const RegisterPage = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen">
-        <header className="p-5 text-white flex items-center justify-between">
-          <div className="text-2xl font-bold">Jenova</div>
-          <Link to={"/login"} className="font-bold text-xl underline">
-            Login
-          </Link>
-        </header>
         <div className="flex items-center justify-center min-h-[calc(100vh-76px)] px-4">
           <ToastContainer />
           <div className="bg-[#00000045] text-white backdrop-blur-sm p-8 shadow-2xl rounded-lg w-full max-w-md">
