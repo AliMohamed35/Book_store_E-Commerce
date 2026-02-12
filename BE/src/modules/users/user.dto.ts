@@ -7,6 +7,17 @@ export interface CreateUserDTO {
 }
 
 export interface UserResponseDTO {
+  id: number;
+  name: string;
+  email: string;
+  address: string;
+  phone_number: string;
+  role: string;
+  isActive: boolean;
+  isVerified: boolean;
+}
+
+export interface BasicUserResponseDTO {
   name: string;
   email: string;
   address: string;

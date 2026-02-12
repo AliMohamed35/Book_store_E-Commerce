@@ -16,6 +16,7 @@ import { logger } from "../../utils/logs/logger.ts";
 import { getOTPEmailTemplate, sendMail } from "../../utils/mail/sendMail.ts";
 import { generateOTP } from "../../utils/otp/generateOTP.ts";
 import {
+  BasicUserResponseDTO,
   CreateUserDTO,
   DeleteDTO,
   LoginDTO,
@@ -28,7 +29,7 @@ import {
 } from "../users/user.dto.ts";
 
 export class UserService {
-  async register(userData: CreateUserDTO): Promise<UserResponseDTO> {
+  async register(userData: CreateUserDTO): Promise<BasicUserResponseDTO> {
     // Check user Existence
     const existingUser = await User.findOne({
       where: { email: userData.email },
@@ -192,9 +193,14 @@ export class UserService {
     }
 
     return {
+      id: existingUser.getDataValue("id"),
       name: existingUser.getDataValue("name"),
       email: existingUser.getDataValue("email"),
       address: existingUser.getDataValue("address"),
+      phone_number: existingUser.getDataValue("phone_number"),
+      role: existingUser.getDataValue("role"),
+      isActive: existingUser.getDataValue("isActive"),
+      isVerified: existingUser.getDataValue("isVerified"),
     };
   }
 
@@ -323,7 +329,7 @@ export class UserService {
     };
   }
 
-  async verifyUser(email: string, otp: number): Promise<UserResponseDTO> {
+  async verifyUser(email: string, otp: number): Promise<BasicUserResponseDTO> {
     const existingUser = await User.findOne({ where: { email } });
 
     if (!existingUser) throw new ResourceNotFoundError("User doesn't exist!");
