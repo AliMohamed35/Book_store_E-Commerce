@@ -19,6 +19,12 @@ export interface Order {
   quantity: number;
   price_at_purchase: number;
   status: OrderStatusType;
+  book?: {
+    id: number;
+    book_name: string;
+    price: number;
+    description: string;
+  };
 }
 
 // Item to add to cart/order

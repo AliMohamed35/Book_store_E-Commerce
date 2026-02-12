@@ -1,7 +1,12 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi } from './authApi';
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../utils/constants';
-import type { AuthState, LoginRequest, RegisterRequest, VerifyOtpRequest } from './types';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { authApi } from "./authApi";
+import { TOKEN_KEY, REFRESH_TOKEN_KEY } from "../../utils/constants";
+import type {
+  AuthState,
+  LoginRequest,
+  RegisterRequest,
+  VerifyOtpRequest,
+} from "./types";
 
 // Initial state
 const initialState: AuthState = {
@@ -14,7 +19,7 @@ const initialState: AuthState = {
 
 // Async Thunks
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
@@ -23,25 +28,27 @@ export const loginUser = createAsyncThunk(
       localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      return rejectWithValue(error.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (data: RegisterRequest, { rejectWithValue }) => {
     try {
       const response = await authApi.register(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      return rejectWithValue(
+        error.response?.data?.message || "Registration failed",
+      );
     }
-  }
+  },
 );
 
 export const verifyOtp = createAsyncThunk(
-  'auth/verifyOtp',
+  "auth/verifyOtp",
   async (data: VerifyOtpRequest, { rejectWithValue }) => {
     try {
       const response = await authApi.verifyOtp(data);
@@ -49,13 +56,15 @@ export const verifyOtp = createAsyncThunk(
       localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Verification failed');
+      return rejectWithValue(
+        error.response?.data?.message || "Verification failed",
+      );
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
@@ -65,14 +74,26 @@ export const logoutUser = createAsyncThunk(
       // Still logout locally even if API fails
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      return rejectWithValue(error.response?.data?.message || 'Logout failed');
+      return rejectWithValue(error.response?.data?.message || "Logout failed");
     }
-  }
+  },
+);
+
+export const getUser = createAsyncThunk(
+  "auth/getUser",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await authApi.getUserById(id);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to get user");
+    }
+  },
 );
 
 // Slice
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     clearError: (state) => {
@@ -140,6 +161,18 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
+      })
+      .addCase(getUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(getUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

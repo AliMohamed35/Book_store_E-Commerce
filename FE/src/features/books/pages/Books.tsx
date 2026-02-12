@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { getAllBooks } from "../booksSlice";
 import { addOrder } from "../../orders/ordersSlice";
+import { toast } from "react-toastify";
 
 const BooksPage = () => {
   const dispatch = useAppDispatch();
@@ -11,8 +12,19 @@ const BooksPage = () => {
     dispatch(getAllBooks());
   }, [dispatch]);
 
-  const handleAddToCart = (bookId: number) => {
-    dispatch(addOrder([{ bookId, quantity: 1 }]));
+  const handleAddToCart = async (bookId: number, bookName: string) => {
+    try {
+      await dispatch(addOrder([{ bookId, quantity: 1 }])).unwrap();
+      toast.success(`"${bookName}" added to cart!`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error: any) {
+      toast.error(error || "Failed to add to cart", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
   };
 
   return (
@@ -85,7 +97,7 @@ const BooksPage = () => {
                   <button
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={b.stock === 0}
-                    onClick={() => handleAddToCart(b.id)}
+                    onClick={() => handleAddToCart(b.id, b.book_name)}
                   >
                     Add to Cart
                   </button>
