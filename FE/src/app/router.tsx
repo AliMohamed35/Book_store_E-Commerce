@@ -6,6 +6,8 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 import BooksPage from "../features/books/pages/Books";
 import ProfilePage from "../pages/Profile";
+import ContactPage from "../pages/ContactPage";
+import AboutPage from "../pages/AboutPage";
 
 export const router = createBrowserRouter([
   // Auth routes - NO header/layout
@@ -21,6 +23,8 @@ export const router = createBrowserRouter([
       // Add other protected routes here
       { path: "books", element: <BooksPage /> },
       { path: "user/profile", element: <ProfilePage /> },
+      { path: "contact", element: <ContactPage /> },
+      { path: "about", element: <AboutPage /> },
       // { path: "books/:id", element: <BookDetailsPage /> },
     ],
   },

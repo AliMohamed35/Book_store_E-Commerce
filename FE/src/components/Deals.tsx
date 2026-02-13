@@ -70,7 +70,7 @@ const Deals = () => {
                 )}
                 
                 {/* Book Cover */}
-                <div className="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center relative overflow-hidden">
+                <div className="h-48 bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center relative overflow-hidden">
                   <span className="text-white text-6xl group-hover:scale-110 transition-transform duration-300">📚</span>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
                 </div>
