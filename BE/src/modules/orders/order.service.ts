@@ -1,12 +1,10 @@
 import sequelize from "../../DB/connection";
-import Book from "../../DB/models/book.model";
-import Order from "../../DB/models/orders_model";
-import User from "../../DB/models/user.model";
+import { Book, Order } from "../../DB/index"; 
 import {
   BadRequestError,
   ResourceNotFoundError,
 } from "../../ExceptionHandler/customError";
-import { CreateOrderDTO, OrderResponseDTO, OrderStatus } from "./order.dto";
+import { OrderResponseDTO, OrderStatus } from "./order.dto";
 
 export class OrderService {
   async placeOrder(
@@ -36,7 +34,8 @@ export class OrderService {
           );
         }
 
-        const priceAtPurchase = item.quantity * book.getDataValue("price");
+        const bookPrice = book.getDataValue("price");
+        const additionalPrice = item.quantity * bookPrice;
 
         // Update stock
         await book.update(
@@ -44,25 +43,59 @@ export class OrderService {
           { transaction },
         );
 
-        // Create order WITH transaction
-        const order = await Order.create(
-          {
+        // Check if user already has a PENDING order for this book
+        const existingOrder = await Order.findOne({
+          where: {
+            user_id: userId,
+            book_id: item.bookId,
+            status: OrderStatus.PENDING,
+          },
+          transaction,
+        });
+
+        if (existingOrder) {
+          // Update existing order - increase quantity and price
+          const existingQuantity = existingOrder.getDataValue("quantity");
+          const existingPrice = existingOrder.getDataValue("price_at_purchase");
+          const newQuantity = existingQuantity + item.quantity;
+          const newPrice = existingPrice + additionalPrice;
+
+          await existingOrder.update(
+            {
+              quantity: newQuantity,
+              price_at_purchase: newPrice,
+            },
+            { transaction },
+          );
+
+          orders.push({
+            user_id: userId,
+            book_id: item.bookId,
+            status: OrderStatus.PENDING,
+            quantity: newQuantity,
+            price_at_purchase: newPrice,
+          });
+        } else {
+          // Create new order
+          const order = await Order.create(
+            {
+              user_id: userId,
+              book_id: item.bookId,
+              status: OrderStatus.PENDING,
+              quantity: item.quantity,
+              price_at_purchase: additionalPrice,
+            },
+            { transaction },
+          );
+
+          orders.push({
             user_id: userId,
             book_id: item.bookId,
             status: OrderStatus.PENDING,
             quantity: item.quantity,
-            price_at_purchase: priceAtPurchase,
-          },
-          { transaction },
-        );
-
-        orders.push({
-          user_id: userId,
-          book_id: item.bookId,
-          status: OrderStatus.PENDING,
-          quantity: item.quantity,
-          price_at_purchase: priceAtPurchase,
-        });
+            price_at_purchase: additionalPrice,
+          });
+        }
       }
 
       // Commit transaction - all succeeded
@@ -84,6 +117,69 @@ export class OrderService {
     existingOrder.destroy();
 
     return id;
+  }
+
+  async getAllOrders(page: number = 1, limit: number = 10) {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Order.findAndCountAll({
+      limit: limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+    if (rows.length === 0) {
+      throw new ResourceNotFoundError("No orders found in database");
+    }
+
+    return {
+      data: rows,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit,
+        hasNextPage: page < Math.ceil(count / limit),
+        hasPrevPage: page > 1,
+      },
+    };
+  }
+
+  async getOrdersByUserId(
+    userId: number,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Order.findAndCountAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: Book,
+          as: "book",
+          attributes: ["id", "book_name", "price", "description"],
+        },
+      ],
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (rows.length === 0) {
+      throw new ResourceNotFoundError("No orders found for this user");
+    }
+
+    return {
+      data: rows,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit,
+        hasNextPage: page < Math.ceil(count / limit),
+        hasPrevPage: page > 1,
+      },
+    };
   }
 }
 

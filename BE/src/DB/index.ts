@@ -4,5 +4,6 @@ import Order from "../DB/models/orders_model.ts"
 
 User.hasMany(Order, { foreignKey: "user_id", onDelete: "CASCADE" });
 Order.belongsTo(User, { foreignKey: "user_id" });
+Order.belongsTo(Book, { foreignKey: 'book_id', as: 'book' });
 
 export { User, Book, Order };
